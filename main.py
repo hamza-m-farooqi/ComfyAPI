@@ -47,7 +47,7 @@ def check_idle_timeout():
                         time_difference = current_time - last_message_acknowledge_time
                     if time_difference and time_difference > idle_timeout:
                         print("Idle timeout reached. Stopping pod...")
-                        runpod.terminate_pod(server_settings.RUNPOD_POD_ID)
+                        runpod.stop_pod(server_settings.RUNPOD_POD_ID)
                         break
                     else:
                         print(

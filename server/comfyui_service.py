@@ -3,7 +3,6 @@ import uuid
 import websocket
 import json
 import random
-import asyncio
 import requests
 from server.server_settings import BASE_DIR
 

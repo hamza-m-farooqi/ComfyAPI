@@ -18,7 +18,7 @@ def process_job(job: Job):
 
 
 def process_response(job: Job, image_path: str):
-    cloud_storage_path = upload(str(image_path), job.job_s3_folder)
+    cloud_storage_path = upload(path=str(image_path), object_name=job.job_s3_folder)
     print(f"Cloud storage path: {cloud_storage_path}")
     response = InferenceResponse(job_id=job.job_id, image_path=cloud_storage_path)
     webhook_response(

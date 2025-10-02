@@ -1,2 +1,3 @@
 runpod
 websocket
+boto3

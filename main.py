@@ -2,8 +2,6 @@ import os
 import sys
 import time
 import json
-import torch
-import argparse
 import signal
 import runpod
 import requests

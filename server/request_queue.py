@@ -15,8 +15,8 @@ class InferenceRequest(BaseModel):
 
 
 class InferenceResponse(BaseModel):
-    job_id: str = None
-    image_path: str = None
+    job_id: str|None = None
+    image_path: str|None = None
 
 
 class Job(BaseModel):

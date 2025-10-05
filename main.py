@@ -81,7 +81,7 @@ def process_request_payload(request_dict):
     return job
 
 
-def callback(data):
+async def callback(data):
     if not data:
         print("No request payload found!")
         # signal_pod_termination()
@@ -97,7 +97,7 @@ def callback(data):
     
     try:
         lora_path = download_lora(job.lora_url, f"{job.job_id}.safetensors")
-        process_job(job)
+        await process_job(job)
         try:
             os.remove(lora_path)
             delete_old_images("/workspace/ComfyUI/output")
@@ -118,11 +118,11 @@ def callback(data):
 #         last_message_acknowledge_time = time.time()
 #         is_last_message_acknowledged = True
 
-def receive_job(event):
+async def receive_job(event):
     data_for_job = event["input"]
     if not data_for_job:
         return {"error": "No JSON data provided"}
-    callback(data_for_job)
+    await callback(data_for_job)
     return "Image generated successfully"
 
 

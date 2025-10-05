@@ -7,12 +7,11 @@ from server.gcloud_utils import upload
 from server.utils import webhook_response
 
 
-def process_job(job: Job):
+async def process_job(job: Job):
     service = ComfyUIService()
     for param in job.job_request_params:
-        image_path = asyncio.run(
-            service.generate_image(param.prompt, f"{job.job_id}.safetensors")
-        )
+        image_path = await service.generate_image(param.prompt, f"{job.job_id}.safetensors")
+        
         print(f"Image path: {image_path}")
         Thread(target=process_response, args=(job, image_path)).start()
 

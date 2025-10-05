@@ -20,13 +20,13 @@ from server import server_settings
 runpod.api_key = server_settings.RUNPOD_API_KEY
 
 # Global stop events for graceful thread control
-stop_event = threading.Event()  # Application-wide shutdown
+# stop_event = threading.Event()  # Application-wide shutdown
 
 # Thread-safe lock for global variables
-lock = threading.Lock()
+# lock = threading.Lock()
 
-last_message_acknowledge_time = time.time()
-is_last_message_acknowledged = True
+# last_message_acknowledge_time = time.time()
+# is_last_message_acknowledged = True
 
 
 # def check_idle_timeout():
@@ -82,10 +82,6 @@ def process_request_payload(request_dict):
 
 
 def callback(data):
-    global is_last_message_acknowledged
-    with lock:
-        is_last_message_acknowledged = False
-    
     if not data:
         print("No request payload found!")
         # signal_pod_termination()
@@ -163,15 +159,15 @@ def receive_job(event):
 #         time.sleep(server_settings.POLLING_INTERVAL)
 
 
-def handle_termination_signal(signum, frame):
-    print("Received termination signal. Stopping listener...")
-    stop_event.set()
-    sys.exit(0)
+# def handle_termination_signal(signum, frame):
+#     print("Received termination signal. Stopping listener...")
+#     stop_event.set()
+#     sys.exit(0)
 
 
 # Register the signal handlers to gracefully stop the application
-signal.signal(signal.SIGTERM, handle_termination_signal)
-signal.signal(signal.SIGINT, handle_termination_signal)
+# signal.signal(signal.SIGTERM, handle_termination_signal)
+# signal.signal(signal.SIGINT, handle_termination_signal)
 
 # idle_time_checker_thread = threading.Thread(target=check_idle_timeout)
 # idle_time_checker_thread.start()

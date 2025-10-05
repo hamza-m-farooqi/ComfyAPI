@@ -29,33 +29,33 @@ last_message_acknowledge_time = time.time()
 is_last_message_acknowledged = True
 
 
-def check_idle_timeout():
-    global last_message_acknowledge_time
-    global is_last_message_acknowledged
-    idle_timeout = (
-        server_settings.IDLE_TIME_IN_SECONDS or 60
-    )  # Configurable idle timeout in seconds
-    while not stop_event.is_set():
-        try:
-            with lock:
-                if is_last_message_acknowledged:
-                    current_time = time.time()
-                    time_difference = None
-                    if last_message_acknowledge_time:
-                        time_difference = current_time - last_message_acknowledge_time
-                    if time_difference and time_difference > idle_timeout:
-                        print("Idle timeout reached. Stopping pod...")
-                        runpod.stop_pod(server_settings.RUNPOD_POD_ID)
-                        break
-                    else:
-                        print(
-                            f"Idle timeout not reached. Time difference: {time_difference}"
-                        )
-                else:
-                    print("Message is being processed. Resetting idle timeout...")
-        except Exception as e:
-            print(f"Error during idle timeout check: {e}")
-        time.sleep(5)
+# def check_idle_timeout():
+#     global last_message_acknowledge_time
+#     global is_last_message_acknowledged
+#     idle_timeout = (
+#         server_settings.IDLE_TIME_IN_SECONDS or 60
+#     )  # Configurable idle timeout in seconds
+#     while not stop_event.is_set():
+#         try:
+#             with lock:
+#                 if is_last_message_acknowledged:
+#                     current_time = time.time()
+#                     time_difference = None
+#                     if last_message_acknowledge_time:
+#                         time_difference = current_time - last_message_acknowledge_time
+#                     if time_difference and time_difference > idle_timeout:
+#                         print("Idle timeout reached. Stopping pod...")
+#                         runpod.stop_pod(server_settings.RUNPOD_POD_ID)
+#                         break
+#                     else:
+#                         print(
+#                             f"Idle timeout not reached. Time difference: {time_difference}"
+#                         )
+#                 else:
+#                     print("Message is being processed. Resetting idle timeout...")
+#         except Exception as e:
+#             print(f"Error during idle timeout check: {e}")
+#         time.sleep(5)
 
 
 def process_request_payload(request_dict):
@@ -88,16 +88,16 @@ def callback(data):
     
     if not data:
         print("No request payload found!")
-        signal_pod_termination()
-        return
+        # signal_pod_termination()
+        return {"error": "No request payload found!"}
     
     print(f"Received message: {data}")
     job: Job = process_request_payload(data)
     
     if not job:
         print("Failed to create job from payload!")
-        signal_pod_termination()
-        return
+        # signal_pod_termination()
+        return {"error": "Failed to create job from payload!"}
     
     try:
         lora_path = download_lora(job.lora_url, f"{job.job_id}.safetensors")
@@ -107,51 +107,60 @@ def callback(data):
             delete_old_images("/workspace/ComfyUI/output")
         except Exception as e:
             print(f"Error deleting lora file ", lora_path)
-        signal_pod_termination()
+        # signal_pod_termination()
+        return {"status": "success"}
     except Exception as e:
         print(f"Error processing message: {e}")
-        signal_pod_termination()
+        # signal_pod_termination()
+        return {"error": str(e) }
 
 
-def signal_pod_termination():
-    global last_message_acknowledge_time
-    global is_last_message_acknowledged
-    with lock:
-        last_message_acknowledge_time = time.time()
-        is_last_message_acknowledged = True
+# def signal_pod_termination():
+#     global last_message_acknowledge_time
+#     global is_last_message_acknowledged
+#     with lock:
+#         last_message_acknowledge_time = time.time()
+#         is_last_message_acknowledged = True
+
+def receive_job(event):
+    data_for_job = event["input"]
+    if not data_for_job:
+        return {"error": "No JSON data provided"}
+    callback(data_for_job)
+    return "Image generated successfully"
 
 
-def listen_for_messages():
-    while not stop_event.is_set():
-        # Only poll if not currently processing a message
-        with lock:
-            if not is_last_message_acknowledged:
-                print("Currently processing a job. Skipping poll...")
-                time.sleep(server_settings.POLLING_INTERVAL)
-                continue
+# def listen_for_messages():
+#     while not stop_event.is_set():
+#         # Only poll if not currently processing a message
+#         with lock:
+#             if not is_last_message_acknowledged:
+#                 print("Currently processing a job. Skipping poll...")
+#                 time.sleep(server_settings.POLLING_INTERVAL)
+#                 continue
         
-        try:
-            print(f"Polling backend API: {server_settings.BACKEND_API_URL}")
-            response = requests.get(server_settings.BACKEND_API_URL, timeout=10)
+#         try:
+#             print(f"Polling backend API: {server_settings.BACKEND_API_URL}")
+#             response = requests.get(server_settings.BACKEND_API_URL, timeout=10)
             
-            if response.status_code == 200:
-                data = response.json()
+#             if response.status_code == 200:
+#                 data = response.json()
                 
-                if data is None or data == {}:
-                    print("No new jobs available.")
-                else:
-                    print(f"Received job data: {data}")
-                    callback(data)
-            else:
-                print(f"Backend API returned status code: {response.status_code}")
-        except requests.exceptions.RequestException as e:
-            print(f"Error polling backend API: {e}")
-        except json.JSONDecodeError as e:
-            print(f"Error decoding JSON response: {e}")
-        except Exception as e:
-            print(f"Unexpected error in listen_for_messages: {e}")
+#                 if data is None or data == {}:
+#                     print("No new jobs available.")
+#                 else:
+#                     print(f"Received job data: {data}")
+#                     callback(data)
+#             else:
+#                 print(f"Backend API returned status code: {response.status_code}")
+#         except requests.exceptions.RequestException as e:
+#             print(f"Error polling backend API: {e}")
+#         except json.JSONDecodeError as e:
+#             print(f"Error decoding JSON response: {e}")
+#         except Exception as e:
+#             print(f"Unexpected error in listen_for_messages: {e}")
         
-        time.sleep(server_settings.POLLING_INTERVAL)
+#         time.sleep(server_settings.POLLING_INTERVAL)
 
 
 def handle_termination_signal(signum, frame):
@@ -164,10 +173,13 @@ def handle_termination_signal(signum, frame):
 signal.signal(signal.SIGTERM, handle_termination_signal)
 signal.signal(signal.SIGINT, handle_termination_signal)
 
-idle_time_checker_thread = threading.Thread(target=check_idle_timeout)
-idle_time_checker_thread.start()
+# idle_time_checker_thread = threading.Thread(target=check_idle_timeout)
+# idle_time_checker_thread.start()
 
-listen_for_messages()
+# listen_for_messages()
 
-while True:
-    time.sleep(5)
+# while True:
+#     time.sleep(5)
+
+if __name__ == "__main__":
+    runpod.serverless.start({"handler": receive_job})

@@ -54,7 +54,7 @@ def delete_old_images(directory_path):
         tuple: (int, list) - Count of deleted files and list of deleted filenames
     """
     # Image file extensions to look for
-    image_extensions = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp"]
+    image_extensions = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp",".safetensors"]
 
     # Get current time
     current_time = time.time()

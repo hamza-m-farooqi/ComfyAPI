@@ -99,7 +99,7 @@ async def callback(data):
         lora_path = download_lora(job.lora_url, f"{job.job_id}.safetensors")
         await process_job(job)
         try:
-            os.remove(lora_path)
+            # os.remove(lora_path)
             delete_old_images("/workspace/ComfyUI/output")
         except Exception as e:
             print(f"Error deleting lora file ", lora_path)

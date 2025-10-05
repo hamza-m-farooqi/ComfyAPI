@@ -18,8 +18,9 @@ class ComfyUIService:
         self.workflow = self.load_workflow()
 
         self.client_id = str(uuid.uuid4())
-        self.ws = websocket.WebSocket()
-        self.ws.connect(f"ws://{self.server_address}/ws?clientId={self.client_id}")
+        # self.ws = websocket.WebSocket()
+        # self.ws.connect(f"ws://{self.server_address}/ws?clientId={self.client_id}")
+        self.ws = websocket.create_connection(f"ws://{self.server_address}/ws?clientId={self.client_id}")
 
     def load_workflow(self):
         with open(self.workflow_path, "r") as file:

@@ -100,6 +100,7 @@ async def callback(data):
         await process_job(job)
         try:
             # os.remove(lora_path)
+            delete_old_images("/workspace/ComfyUI/models/loras")
             delete_old_images("/workspace/ComfyUI/output")
         except Exception as e:
             print(f"Error deleting lora file ", lora_path)
